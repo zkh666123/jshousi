@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS 布局：左侧定宽 + 右侧自适应</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: #1f2933;
+        background: #f6f7f9;
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      main {
+        width: min(960px, calc(100vw - 32px));
+        margin: 32px auto;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      h2 {
+        margin: 24px 0 8px;
+        font-size: 16px;
+      }
+
+      .layout {
+        min-height: 120px;
+        border: 1px solid #d0d5dd;
+        background: #ffffff;
+      }
+
+      .left {
+        width: 200px;
+        padding: 16px;
+        color: #ffffff;
+        background: #2563eb;
+      }
+
+      .right {
+        min-width: 0;
+        padding: 16px;
+        background: #ecfdf3;
+      }
+
+      .flex-layout {
+        display: flex;
+      }
+
+      .flex-layout .left {
+        flex: 0 0 200px;
+      }
+
+      .flex-layout .right {
+        flex: 1 1 auto;
+      }
+
+      .grid-layout {
+        display: grid;
+        grid-template-columns: 200px minmax(0, 1fr);
+      }
+
+      .absolute-layout {
+        position: relative;
+      }
+
+      .absolute-layout .left {
+        position: absolute;
+        inset: 0 auto 0 0;
+      }
+
+      .absolute-layout .right {
+        margin-left: 200px;
+        min-height: 120px;
+      }
+
+      @media (max-width: 520px) {
+        .flex-layout,
+        .grid-layout {
+          display: block;
+        }
+
+        .left,
+        .right {
+          width: 100%;
+        }
+
+        .absolute-layout .left {
+          position: static;
+        }
+
+        .absolute-layout .right {
+          margin-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>左侧 200px 固定，右侧自适应</h1>
+
+      <h2>推荐：flex</h2>
+      <section class="layout flex-layout">
+        <aside class="left">left: 200px</aside>
+        <article class="right">right: flex: 1，占满剩余空间。</article>
+      </section>
+
+      <h2>备选：grid</h2>
+      <section class="layout grid-layout">
+        <aside class="left">left: 200px</aside>
+        <article class="right">right: minmax(0, 1fr)，避免内容撑破布局。</article>
+      </section>
+
+      <h2>备选：absolute + margin-left</h2>
+      <section class="layout absolute-layout">
+        <aside class="left">left: absolute</aside>
+        <article class="right">right: margin-left: 200px。</article>
+      </section>
+    </main>
+  </body>
+</html>

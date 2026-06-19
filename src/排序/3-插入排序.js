@@ -39,7 +39,7 @@
  * 方法一 直接插入排序(简单插入)
  */
 
-const insertionSort = function (arr) {
+const insertionSort1 = function (arr) {
   const len = arr.length;
   let cur = null; // 当前待插入值
 
@@ -62,7 +62,7 @@ const insertionSort = function (arr) {
  * @param {*} arr
  * @returns
  */
-const insertionSort = function (arr) {
+const insertionSort2 = function (arr) {
   for (let i = 1; i < arr.length; i++) {
     let left = 0;
     let right = i - 1;

@@ -14,44 +14,45 @@
 /**
  * ⼿动实现⼀个JSONP⽅法
  * @param {string} url   JSONP请求地址，返回⼀个js⽂件
- * @param {Object} params JSONP请求中的url参数，key为字符串，value为数字或者字
-符串
+ * @param {Object} _params JSONP请求中的url参数，key为字符串，value为数字或者字符串。
+ *                         可在其中通过 callbackName 字段指定回调函数名（默认为 "callback"）
  */
 function JSONP(url, _params = {}) {
-  const callbackName = params.callbackName || "callback";
-  let params = Object.keys(_params).map((key) => `${key}=${_params[key]}`);
+  // 把 callbackName 从查询参数中分离出来
+  const { callbackName = "callback", ...rest } = _params;
+  // callback 名也要拼到 URL 上，服务端才知道用哪个名字包裹返回值
+  const queryParts = Object.keys(rest).map(
+    (key) => `${encodeURIComponent(key)}=${encodeURIComponent(rest[key])}`
+  );
+  queryParts.push(`callback=${encodeURIComponent(callbackName)}`);
 
-  let script = document.createElement("script");
-  script.src = `${url}?${params.join("&")}`;
-  document.body.appendChild(script);
-  
+  const script = document.createElement("script");
+  script.src = `${url}?${queryParts.join("&")}`;
+
   return new Promise((resolve, reject) => {
     window[callbackName] = (result) => {
-      try {
-        resolve(result);
-      } catch (e) {
-        reject(e);
-      } finally {
-        script.parentNode.removeChild(script);
-      }
+      resolve(result);
+      script.parentNode && script.parentNode.removeChild(script);
+      delete window[callbackName];
     };
+    script.onerror = (e) => {
+      reject(e);
+      script.parentNode && script.parentNode.removeChild(script);
+      delete window[callbackName];
+    };
+    document.body.appendChild(script);
   });
 }
 
-// ⽤例
-const result = await JSONP("http://xxx.alipay.com/jsonp", {
-  user: "xxx",
-  callbackName: "callback",
-});
-console.log(JSON.stringify(result)); // "{"input":{"user":"xxx"},"output":{"test":1}}"
-
-// http://xxx.alipay.com/jsonp
-// 返回⼀个js⽂件，内容如下
-callback({
-  input: {
+// ⽤例（包在 async 函数里，避免依赖顶层 await）
+async function demo() {
+  const result = await JSONP("http://xxx.alipay.com/jsonp", {
     user: "xxx",
-  },
-  output: {
-    test: 1,
-  },
-});
+    callbackName: "callback",
+  });
+  console.log(JSON.stringify(result));
+}
+// demo();
+
+// http://xxx.alipay.com/jsonp 返回⼀个js⽂件，内容形如：
+// callback({ input: { user: "xxx" }, output: { test: 1 } });

@@ -45,7 +45,7 @@ function deepEqual2(a, b) {
     if (Object.keys(a).length !== Object.keys(b).length) return false;
 
     let result = Object.keys(a).every((key) => {
-      return deepEqual(a[key], b[key]);
+      return deepEqual2(a[key], b[key]);
     });
 
     // deepEqual(Number(1), Number(2))

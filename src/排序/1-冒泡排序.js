@@ -30,7 +30,7 @@
  * @param {*} arr 
  * @returns 
  */
-const bubbleSort = function (arr) {
+const bubbleSort1 = function (arr) {
   console.log(`原始排序 `, arr);
   const len = arr.length;
   for (let i = 0; i < len; i++) {
@@ -45,7 +45,7 @@ const bubbleSort = function (arr) {
 };
 
 const arr = [5, 8, 2, 0, 1, 9, 3, 1, 4, 7, 6, 9];
-console.log(bubbleSort(arr));
+console.log(bubbleSort1(arr));
 
 /**
  * 方法二 双向冒泡 正反冒泡 正向冒泡找到最大值，反向冒泡找到最小值
@@ -53,7 +53,7 @@ console.log(bubbleSort(arr));
  * @param {*} arr 
  * @returns 
  */
-const bubbleSort = function (arr) {
+const bubbleSort2 = function (arr) {
   let low = 0;
   let high = arr.length - 1;
   let index = 0;

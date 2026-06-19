@@ -8,32 +8,42 @@
  * 如果一个对象的属性值通过某种间接的方式指回该对象本身，即循环引用，属性也会被忽略。
  */
 
+// 方法一（简化版，仅作思路演示，未严格匹配原生行为）
+// 数组中的 undefined/function/symbol 项会变成 "null"，对象中的同类型属性会被忽略
 function jsonStringify(obj) {
-  let type = typeof obj;
+  const type = typeof obj;
+  if (obj === null) return "null";
   if (type !== "object") {
-    if (/string|undefined|function/.test(type)) {
-      obj = '"' + obj + '"';
+    if (type === "function" || type === "undefined" || type === "symbol") {
+      // 顶层为这些类型时，原生 JSON.stringify 返回 undefined
+      return undefined;
     }
-    return String(obj);
-  } else {
-    let json = [];
-    let arr = Array.isArray(obj);
-    for (let k in obj) {
-      let v = obj[k];
-      let type = typeof v;
-      if (/string|undefined|function/.test(type)) {
-        v = '"' + v + '"';
-      } else if (type === "object") {
-        v = jsonStringify(v);
-      }
-      json.push((arr ? "" : '"' + k + '":') + String(v));
-    }
-    return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
+    if (type === "string") return '"' + obj + '"';
+    return String(obj); // number / boolean
   }
+  const isArr = Array.isArray(obj);
+  const items = [];
+  for (let k in obj) {
+    if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+    const v = obj[k];
+    const vType = typeof v;
+    let serialized;
+    if (vType === "function" || vType === "undefined" || vType === "symbol") {
+      // 数组里这些值变 "null"；对象里直接忽略
+      if (isArr) serialized = "null";
+      else continue;
+    } else {
+      serialized = jsonStringify(v);
+    }
+    items.push((isArr ? "" : '"' + k + '":') + serialized);
+  }
+  return (isArr ? "[" : "{") + items.join(",") + (isArr ? "]" : "}");
 }
-jsonStringify({ x: 5 }); // "{"x":5}"
-jsonStringify([1, "false", false]); // "[1,"false",false]"
-jsonStringify({ b: undefined }); // "{"b":"undefined"}"
+console.log(jsonStringify({ x: 5 })); // {"x":5}
+console.log(jsonStringify([1, "false", false])); // [1,"false",false]
+console.log(jsonStringify({ b: undefined })); // {}
+console.log(jsonStringify([undefined, () => {}, Symbol()])); // [null,null,null]
+console.log(jsonStringify(null)); // null
 
 
 /**

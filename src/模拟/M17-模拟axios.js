@@ -39,10 +39,11 @@
  */
 var getJSON = function (url) {
   return new Promise((resolve, reject) => {
-    const xhr = XMLHttpRequest
+    // 用 typeof 而不是直接引用，否则在没有 XMLHttpRequest 的环境会 ReferenceError
+    const xhr = typeof XMLHttpRequest !== "undefined"
       ? new XMLHttpRequest()
       : new ActiveXObject("Microsoft.XMLHTTP");
-    xhr.open("GET", url, false);
+    xhr.open("GET", url, true);
     xhr.responseType = "json";
     xhr.setRequestHeader("Accept", "application/json");
     xhr.onreadystatechange = () => {
@@ -69,16 +70,16 @@ var getJSON = function (url) {
  */
 var getJSON = function (url, timeout = 5000) {
   return new Promise((resolve, reject) => {
-    const xhr = XMLHttpRequest
+    const xhr = typeof XMLHttpRequest !== "undefined"
       ? new XMLHttpRequest()
       : new ActiveXObject("Microsoft.XMLHTTP");
     let isTimeout = false;
     const timer = setTimeout(() => {
       isTimeout = true;
       xhr.abort();
-      reject("request is timeout");
+      reject(new Error("request is timeout"));
     }, timeout);
-    xhr.open("GET", url, false);
+    xhr.open("GET", url, true);
     xhr.responseType = "json";
     xhr.setRequestHeader("Accept", "application/json");
     xhr.onreadystatechange = () => {
@@ -161,7 +162,8 @@ class SimpleAxios {
 
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
-          if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 0) {
+          // status 0 通常代表网络错误/CORS 失败，不应视为成功
+          if (xhr.status >= 200 && xhr.status < 300) {
             resolve(xhr.responseText);
           } else {
             reject(new Error(`Request failed with status: ${xhr.status}`));
@@ -259,18 +261,24 @@ class Axios {
 
   async request(config) {
     const finalConfig = { ...this.defaults, ...config };
-    let chain = [this.handleRequest(finalConfig), undefined];
+    // chain 中存的是函数对（onFulfilled, onRejected），不是 Promise
+    // 真正的请求函数也是一个函数，由 promise.then 调用
+    const dispatchRequest = (cfg) => this.handleRequest(cfg);
+    const chain = [dispatchRequest, undefined];
 
-    this.interceptors.request.forEach(interceptor => {
+    // 请求拦截器倒序插到前面（先注册的后执行，匹配 axios 行为）
+    this.interceptors.request.forEach((interceptor) => {
       chain.unshift(interceptor.fulfilled, interceptor.rejected);
+    });
+    // 响应拦截器顺序追加到后面
+    this.interceptors.response.forEach((interceptor) => {
+      chain.push(interceptor.fulfilled, interceptor.rejected);
     });
 
     let promise = Promise.resolve(finalConfig);
-
     while (chain.length) {
       promise = promise.then(chain.shift(), chain.shift());
     }
-
     return promise;
   }
 
@@ -320,7 +328,8 @@ class Axios {
 
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
-          if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 0) {
+          // status 0 通常代表网络错误/CORS 失败，不应视为成功
+          if (xhr.status >= 200 && xhr.status < 300) {
             resolve(xhr.responseText);
           } else {
             reject(new Error(`Request failed with status: ${xhr.status}`));
@@ -360,27 +369,6 @@ class Axios {
 
   useResponseInterceptor(fulfilled, rejected) {
     this.interceptors.response.push({ fulfilled, rejected });
-  }
-}
-
-class AxiosCancelTokenSource {
-  constructor() {
-    this.token = new AxiosCancelToken((cancel) => {
-      this.cancel = cancel;
-    });
-  }
-}
-
-class AxiosCancelToken {
-  constructor(executor) {
-    if (typeof executor !== 'function') {
-      throw new Error('executor must be a function.');
-    }
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-      executor(this.reject);
-    });
   }
 }
 

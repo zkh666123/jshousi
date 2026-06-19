@@ -18,7 +18,7 @@ const isCycleObject1 = (obj, parent) => {
   // 遍历一层对象
   for (let key in obj) {
     // 判断是否是对象
-    if (typeof obj[key] === "object") {
+    if (obj[key] && typeof obj[key] === "object") {
       let isCycle = false; // flag 初始化为 false 非循环引用对象
       /**
        * 遍历数组中每一项一层对象 判断是否与 obj[key] 相等
@@ -32,7 +32,7 @@ const isCycleObject1 = (obj, parent) => {
         }
       });
       if (isCycle) return true;
-      isCycle = isCycleObject(obj[key], [...parentArr, obj[key]]);
+      isCycle = isCycleObject1(obj[key], [...parentArr, obj[key]]);
       if (isCycle) return true;
     }
   }

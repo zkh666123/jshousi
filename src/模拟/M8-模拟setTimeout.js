@@ -12,24 +12,32 @@
  * 定时器功能由浏览器实现，它们的实现在不同浏览器之间会有所不同。 定时器也可以由 Node.js 运行时本身实现。
  */
 
-let setTimeout = (fn, timeout, ...args) => {
-  // 初始当前时间
+// 用 requestAnimationFrame 模拟 setTimeout/clearTimeout
+// 返回 handle 对象作为 timerID，配套的 clearTimeout 通过该 handle 取消
+const mySetTimeout = (fn, timeout = 0, ...args) => {
   const start = +new Date();
-  let timer, now;
+  const handle = { rafId: 0, cancelled: false };
   const loop = () => {
-    timer = window.requestAnimationFrame(loop);
-    // 再次运行时获取当前时间
-    now = +new Date();
-    // 当前运行时间 - 初始当前时间 >= 等待时间 ===>> 跳出
+    if (handle.cancelled) return;
+    const now = +new Date();
     if (now - start >= timeout) {
-      fn.apply(this, args);
-      window.cancelAnimationFrame(timer);
+      fn(...args);
+    } else {
+      handle.rafId = window.requestAnimationFrame(loop);
     }
   };
-  window.requestAnimationFrame(loop);
+  handle.rafId = window.requestAnimationFrame(loop);
+  return handle;
+};
+
+const myClearTimeout = (handle) => {
+  if (!handle) return;
+  handle.cancelled = true;
+  window.cancelAnimationFrame(handle.rafId);
 };
 
 function showName() {
   console.log("Hello");
 }
-let timerID = setTimeout(showName, 1000);
+const timerID = mySetTimeout(showName, 1000);
+// myClearTimeout(timerID); // 取消定时器

@@ -12,10 +12,10 @@ String.prototype.trim = function () {
 
 // 方法二
 String.prototype.trim = function () {
-  return s.replace(/^\s+|\s+$/g, "");
+  return this.replace(/^\s+|\s+$/g, "");
 };
 
 // 方法三
 String.prototype.trim = function () {
-  return s.replace(/^\s*|\s*$/g, "");
+  return this.replace(/^\s*|\s*$/g, "");
 };

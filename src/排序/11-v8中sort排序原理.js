@@ -61,7 +61,7 @@ console.log(insertionSort(arr));
  */
 
 // 然而这种实现方式需要额外的空间用来储存左右子集，所以还有一种原地(in-place)排序的实现方式。
-var quickSort = function (arr) {
+var quickSortByExtraSpace = function (arr) {
   if (arr.length <= 1) {
     return arr;
   }
@@ -79,11 +79,14 @@ var quickSort = function (arr) {
       right.push(arr[i]);
     }
   }
-  return quickSort(left).concat([pivot], quickSort(right));
+  return quickSortByExtraSpace(left).concat(
+    [pivot],
+    quickSortByExtraSpace(right)
+  );
 };
 
 // 原地快排
-function quickSort(arr) {
+function quickSortInPlace(arr) {
   // 交换元素
   function swap(arr, a, b) {
     var temp = arr[a];
@@ -119,4 +122,4 @@ function quickSort(arr) {
   return arr;
 }
 
-console.log(quickSort(6, 7, 3, 4, 1, 5, 9, 2, 8));
+console.log(quickSortInPlace([6, 7, 3, 4, 1, 5, 9, 2, 8]));
